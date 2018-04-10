@@ -1,4 +1,4 @@
-setwd("~/Shared/Data-Science/Data-Source-Model-Repository/EFO/script/")
+setwd("~/Shared/Data-Science/Data-Source-Model-Repository/EFO/scripts/")
 
 library(git2r)
 library(RJSONIO)
