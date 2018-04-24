@@ -72,8 +72,8 @@ nodesJson$id <- gsub("ORDO","ORPHA",nodesJson$id)
 ## edges (parents)
 edgesJson <- readJson$graphs$edges[[1]]
 edgesJson <- edgesJson[which(edgesJson$pred %in% c("is_a")),]
-edgesJson$sub <- gsub(".*/","",edgesJson$sub)
-edgesJson$obj <- gsub(".*/","",edgesJson$obj)
+edgesJson$sub <- gsub("_",":",gsub(".*/","",edgesJson$sub))
+edgesJson$obj <- gsub("_",":",gsub(".*/","",edgesJson$obj))
 
 ######################################
 ## crossId
@@ -85,8 +85,6 @@ names(crossId) <- c("id2","id1")
 crossId$id2 <- gsub("ICD-10","ICD10",crossId$id2)
 crossId$id2 <- gsub("MESH","MeSH",crossId$id2)
 crossId$id2 <- gsub("MSH","MeSH",crossId$id2)
-crossId$id2 <- gsub("NCI Metathesaurus","NCIt",crossId$id2)
-crossId$id2 <- gsub("NCI_Metathesaurus","NCIt",crossId$id2)
 crossId$id2 <- gsub("NCI_Thesaurus","NCIt",crossId$id2)
 crossId$id2 <- gsub("NCiT","NCIt",crossId$id2)
 crossId$id2 <- gsub("NCIT","NCIt",crossId$id2)
@@ -98,8 +96,9 @@ crossId$DB1 <- gsub(":.*","",crossId$id1)
 
 ######################################
 ## entryId
-entryId <- crossId[!duplicated(crossId$id1),c("DB1","id1")]
-names(entryId) <- c("DB","id")
+entryId <- nodesJson["id"]
+entryId$DB <- gsub(":.*","",entryId$id)
+entryId <- entryId[,c("DB","id")]
 entryId$definition <- nodesJson$def[match(entryId$id,nodesJson$id)]
 
 ######################################
@@ -122,27 +121,28 @@ parentId <- edgesJson[grep("oboInOwl#ObsoleteClass",edgesJson$obj, invert = T),c
 names(parentId) <- c("id","parent")
 parentId$id <- gsub("Orphanet","ORPHA",parentId$id)
 parentId$parent <- gsub("Orphanet","ORPHA",parentId$parent)
-parentId$DB <- gsub("_.*","",parentId$id)
-parentId$pDB <- gsub("_.*","",parentId$parent)
+parentId$DB <- gsub(":.*","",parentId$id)
+parentId$pDB <- gsub(":.*","",parentId$parent)
 
 #######################################
 crossId$id1 <- gsub(".*:","",crossId$id1)
 crossId$id2 <- gsub(".*:","",crossId$id2)
 entryId$id <- gsub(".*:","",entryId$id)
-parentId$id <- gsub(".*_","",parentId$id)
+parentId$id <- gsub(".*:","",parentId$id)
 parentId$parent <- gsub(".*:","",parentId$parent)
 idNames$id <- gsub(".*:","",idNames$id)
 
 ############################
-EFO_idNames <- idNames[,c("DB","id","name")]
+EFO_idNames <- idNames[,c("DB","id","name","canonical")]
 EFO_parentId <- parentId[,c("DB","id","pDB","parent")]
 EFO_crossId <- crossId[,c("DB1","id1","DB2","id2")]
-EFO_entryid <- entryId[,c("DB","id")]
+EFO_entryId <- entryId[,c("DB","id","definition")]
 
 ############################
 toSave <- grep("^EFO[_]", ls(), value=T)
 for(f in toSave){
   message(paste("Saving", f))
+  print(file.path(ddir, paste(f, ".txt", sep="")))
   ## Ensure unicity
   assign(f, get(f))
   if(length(names(f))==0){
