@@ -3,7 +3,7 @@
 	"title": "Data extracted from the Experimental Factor Ontology (EFO) database",
 	"description": "The scope of EFO is to support the annotation, analysis and visualization of data handled by many groups at the EBI and as the core ontology for Open Targets.",
 	"reference URL": "https://www.ebi.ac.uk/efo/",
-	"version": "0.1",
+	"version": "0.2",
 	"source files": [
 		{
 			"name":"efo.owl",
