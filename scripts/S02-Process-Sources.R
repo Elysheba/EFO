@@ -13,6 +13,7 @@ library(RJSONIO)
 mc.cores <- 55
 sdir <- "../sources/efo"
 ddir <- "../data"
+source("../../00-Utils/writeLastUpdate.R")
 
 ###############################################################################@
 ## Source information ----
@@ -33,27 +34,25 @@ sfi_name <- unlist(lapply(
 ## Data from efo.owl ----
 ###############################################################################@
 ## Convert OWL to JSON
-if(!file.exists(file.path(sdir,"efo.json"))){
-  Sys.setenv(PATH = paste(Sys.getenv("PATH"),"/home/lfrancois/bin/",sep = ":"))
-  system(paste("robot convert --input ",file.path(sdir,"efo.owl"),
-               " --output ",file.path(sdir,"efo.json"), sep = ""))
-}
+Sys.setenv(PATH = paste(Sys.getenv("PATH"),"/home/lfrancois/bin/",sep = ":"))
+system(paste("robot convert --input ",file.path(sdir,"efo.owl"),
+             " --output ",file.path(sdir,"efo.json"), sep = ""))
 readJson <- jsonlite::fromJSON(txt = file.path(sdir,"efo.json"))
 
-checkJson <- do.call(rbind,
-                 lapply(1:nrow(readJson$graphs$nodes[[1]]),
-                        function(i){
-                          ifelse(is.null(readJson$graphs$nodes[[1]]$meta$basicPropertyValues[[i]]),
-                                 pred <-  NA,
-                                 pred <-  unique(readJson$graphs$nodes[[1]]$meta$basicPropertyValues[[i]]$pred))
-                          data.frame(id = readJson$graphs$nodes[[1]]$id[[i]],
-                                     type = readJson$graphs$nodes[[1]]$type[[i]],
-                                     pred = pred,
-                                     stringsAsFactors = F)
-                        }))
-table(checkJson$type)
-table(unique(checkJson$pred[checkJson$type == "CLASS"]) %in% 
-        unique(checkJson$pred[checkJson$pred == "PROPORTY"]))
+# checkJson <- do.call(rbind,
+#                  lapply(1:nrow(readJson$graphs$nodes[[1]]),
+#                         function(i){
+#                           ifelse(is.null(readJson$graphs$nodes[[1]]$meta$basicPropertyValues[[i]]),
+#                                  pred <-  NA,
+#                                  pred <-  unique(readJson$graphs$nodes[[1]]$meta$basicPropertyValues[[i]]$pred))
+#                           data.frame(id = readJson$graphs$nodes[[1]]$id[[i]],
+#                                      type = readJson$graphs$nodes[[1]]$type[[i]],
+#                                      pred = pred,
+#                                      stringsAsFactors = F)
+#                         }))
+# table(checkJson$type)
+# table(unique(checkJson$pred[checkJson$type == "CLASS"]) %in% 
+        # unique(checkJson$pred[checkJson$pred == "PROPORTY"]))
 
 ###########################################
 ## nodes (id, def, name, xref, label)
@@ -104,17 +103,17 @@ syn <- do.call(rbind, lapply(nodesJson, function(x) x$syn))
 
 ## get parents from OBO file
 obo <- getOboInfo("../sources/efo/efo.obo")
-## Not the same amount of terms in obo and owl
-nf.obo <- id[!(id$id %in% obo$termDef$id),]
-w <- which(!is.na(as.numeric(gsub("^[^[:digit:]]*","",nf.obo$id))))
-table(gsub(":.*","",nf.obo[w,"id"]))
-length(gsub(":.*","",nf.obo[w,"id"]))
-head(nf.obo[w,])
-
-nf.owl <- obo$termDef[!(obo$termDef$id %in% id$id),]
-ww <- which(!is.na(as.numeric(gsub("^[^[:digit:]]*","",nf.owl$id))))
-table(gsub(":.*","",nf.owl[ww,"id"]))
-head(nf.owl[ww,])
+# ## Not the same amount of terms in obo and owl
+# nf.obo <- id[!(id$id %in% obo$termDef$id),]
+# w <- which(!is.na(as.numeric(gsub("^[^[:digit:]]*","",nf.obo$id))))
+# table(gsub(":.*","",nf.obo[w,"id"]))
+# length(gsub(":.*","",nf.obo[w,"id"]))
+# head(nf.obo[w,])
+# 
+# nf.owl <- obo$termDef[!(obo$termDef$id %in% id$id),]
+# ww <- which(!is.na(as.numeric(gsub("^[^[:digit:]]*","",nf.owl$id))))
+# table(gsub(":.*","",nf.owl[ww,"id"]))
+# head(nf.owl[ww,])
 
 ## Get Parents
 edgesJson <- obo$termParents
@@ -238,14 +237,17 @@ dim(crossId)
 head(crossId)
 
 ## correct ORDO:Orphanet_ wrong encodings
-crossId$id2 <- gsub(paste("Orphanet_","ORDO:",sep = "|"),"ORPHA:",crossId$id2)
+crossId$id2 <- gsub(paste("Orphanet_","Orphanet","ORDO:",sep = "|"),"ORPHA:",crossId$id2)
 crossId$id2 <- gsub("MESH","MeSH",crossId$id2)
 crossId$id2 <- gsub("MSH","MeSH",crossId$id2)
+crossId$id2 <- gsub("MEDDRA","MedDRA",crossId$id2)
+crossId$id2 <- gsub("MeDRA","MedDRA",crossId$id2)
 crossId$id2 <- gsub("NCI_Thesaurus","NCIt",crossId$id2)
 crossId$id2 <- gsub("NCiT","NCIt",crossId$id2)
 crossId$id2 <- gsub("NCIT","NCIt",crossId$id2)
+crossId$id2 <- gsub("\\bNCI\\b","NCIt",crossId$id2)
 crossId$id2 <- gsub("SNOWMEDCT","SNOMEDCT",crossId$id2)
-crossId$id2 <- gsub("UMLS","MedGen",crossId$id2)
+crossId$id2 <- gsub(paste("UMLS CUI","UMLS_CUI",sep = "|"), "UMLS",crossId$id2)
 crossId$id1 <- gsub("Orphanet","ORPHA",crossId$id1)
 table(gsub(":.*","",crossId$id1))
 table(gsub(":.*","",crossId$id2))
@@ -268,12 +270,10 @@ table(gsub(":.*","",entryId$id))
 nc <- nchar(entryId$def)
 head(table(nc), n = 20)
 entryId[which(nc < 16),]
-entryId[which(nc < 16),"def"] <- NA
+entryId[which(nc < 16),"def"] <- entryId[which(nc < 16),"label"]
 ## Check characters for \t, \n, \r and put to ASCII
 entryId$def <- iconv(x = entryId$def,to="ASCII//TRANSLIT")
-table(unlist(sapply(entryId$def, strsplit, split = "")))
 entryId$def <- gsub(paste("\n","\t","\r", sep = "|")," ",entryId$def)
-table(unlist(sapply(entryId$def, strsplit, split = "")))
 ## Change " to '
 entryId$def <- gsub("\"","'",entryId$def)
 entryId$def <- gsub("\\\\","",entryId$def)
@@ -322,9 +322,7 @@ dim(idNames)
 
 ## Check characters for \t, \n, \r and put to ASCII
 idNames$syn <- iconv(x = idNames$syn,to="ASCII//TRANSLIT")
-table(unlist(sapply(idNames$syn, strsplit, split = "")))
 idNames$syn <- gsub(paste("\n","\t","\r", sep = "|")," ",idNames$syn)
-table(unlist(sapply(idNames$syn, strsplit, split = "")))
 ## Change " to '
 idNames$syn <- gsub("\"","'",idNames$syn)
 idNames$syn <- gsub("\\\\","",idNames$syn)
@@ -343,7 +341,7 @@ head(idNames[which(nc == 6),])
 head(idNames[which(nc < 15 & idNames$canonical == FALSE),])
 ## Remove names of 0 or 1 character long
 idNames[which(nc == 0),]
-idNames[which(nc == 1),]
+idNames[which(nc == 2),]
 # idNames <- idNames[-which(nc == 0),]
 
 ## All idnames in entryid
@@ -398,6 +396,12 @@ for(f in toSave){
     file=file.path(ddir, paste(f, ".txt", sep="")),
     sep="\t",
     row.names=FALSE, col.names=TRUE,
-    quote=FALSE
+    quote=TRUE,
+    qmethod = "double"
   )
 }
+writeLastUpdate()
+
+##############################################################
+## Check model
+source("../../00-Utils/autoCheckModel.R")
