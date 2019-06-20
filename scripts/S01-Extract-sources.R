@@ -38,5 +38,7 @@ EFO_sourceFiles <- data.frame(url = urls,
 toSave <- grep("^EFO[_]", ls(), value = T)
 ddir <- "../data"
 
-write.table(EFO_sourceFiles, file=file.path(ddir, paste(toSave, ".txt", sep="")))
+write.table(get(toSave), row.names = FALSE, sep = "\t", quote = FALSE, file=file.path(ddir, paste(toSave, ".txt", sep="")))
+
+# write.table(EFO_sourceFiles, file=file.path(ddir, paste(toSave, ".txt", sep="")))
             

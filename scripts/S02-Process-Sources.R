@@ -8,6 +8,9 @@ library(XML)
 library(parallel)
 library(git2r)
 library(RJSONIO)
+library(dplyr)
+library(tibble)
+library(tidyr)
 
 ##
 mc.cores <- 55
@@ -182,6 +185,13 @@ crossId <- xref[xref$id %in% diseaseO$descendants,]
 dim(crossId)
 table(gsub(":.*","",crossId$id))
 names(crossId) <- c("dbid1","dbid2")
+## Remove spaces
+head(grep(": ",crossId$dbid2,value = T))
+head(grep(": ",crossId$dbid1,value = T))
+crossId$dbid1 <- gsub(" ","", crossId$dbid1)
+crossId$dbid2 <- gsub(" ","", crossId$dbid2)
+dim(crossId)
+##
 crossId$DB2 <- gsub(":.*","",crossId$dbid2)
 crossId$DB1 <- gsub(":.*","",crossId$dbid1)
 crossId$id2 <- gsub(".*:","",crossId$dbid2)
@@ -193,11 +203,6 @@ dim(crossId)
 head(grep(":",crossId$dbid1,invert = T,value = T))
 head(grep(":",crossId$dbid2,invert = T,value = T))
 crossId <- crossId[grepl(":",crossId$dbid2) & grepl(":",crossId$dbid1) ,]
-dim(crossId)
-## Remove crossids with colon and space ": "
-head(grep(": ",crossId$dbid2,value = T))
-head(grep(": ",crossId$dbid1,value = T))
-crossId <- crossId[grep(": ",crossId$dbid2,invert = T),]
 dim(crossId)
 ##
 ## an integer is a correct disease ID
@@ -247,7 +252,8 @@ crossId$id2 <- gsub("NCiT","NCIt",crossId$id2)
 crossId$id2 <- gsub("NCIT","NCIt",crossId$id2)
 crossId$id2 <- gsub("\\bNCI\\b","NCIt",crossId$id2)
 crossId$id2 <- gsub("SNOWMEDCT","SNOMEDCT",crossId$id2)
-crossId$id2 <- gsub(paste("UMLS CUI","UMLS_CUI",sep = "|"), "UMLS",crossId$id2)
+crossId$id2 <- gsub("SNOMEDCT_US","SNOMEDCT",crossId$id2)
+crossId$id2 <- gsub(paste("UMLSCUI","UMLS_CUI",sep = "|"), "UMLS",crossId$id2)
 crossId$id1 <- gsub("Orphanet","ORPHA",crossId$id1)
 table(gsub(":.*","",crossId$id1))
 table(gsub(":.*","",crossId$id2))
@@ -295,26 +301,25 @@ table(crossId$id1 %in% entryId$id)
 ######################################
 ## idNames
 idNames <- syn[syn$id %in% diseaseO$descendants,]
+idNames$canonical <- FALSE
 head(idNames)
 dim(idNames)
 table(gsub(":.*","",idNames$id))
 
 ## Labels
 lbl <- id[id$id %in% diseaseO$descendants,c("id","label")]
+lbl$canonical <- TRUE
 table(gsub(":.*","",lbl$id))
 unique(grep("#",lbl$id, value =T))
 head(lbl)
 # lbl <- lbl[grep("#",lbl$id,invert = T, value = F),]
 
 ## 
-idNames <- rbind(idNames,setNames(lbl, nm = names(idNames)))
-head(idNames)
-dim(idNames)
-idNames$id <- gsub("Orphanet","ORPHA",idNames$id)
-idNames$DB <- gsub(":.*","",idNames$id)
-idNames$canonical <- ifelse(idNames$syn %in% lbl$label, TRUE, FALSE)
-## Remove duplicated entries but keep all labels 
-dim(idNames)
+idNames <- idNames %>%
+  as_tibble() %>%
+  bind_rows(lbl %>% select(id, syn = label, canonical)) %>%
+  mutate(DB = gsub(":.*","", id))
+## unique
 dim(unique(idNames))
 idNames <- idNames[order(idNames$canonical,decreasing = T),]
 idNames <- unique(idNames)
