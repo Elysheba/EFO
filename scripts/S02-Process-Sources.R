@@ -11,6 +11,7 @@ library(RJSONIO)
 library(dplyr)
 library(tibble)
 library(tidyr)
+library(stringr)
 
 ##
 mc.cores <- 55
@@ -312,12 +313,14 @@ lbl$canonical <- TRUE
 table(gsub(":.*","",lbl$id))
 unique(grep("#",lbl$id, value =T))
 head(lbl)
+table(gsub(":.*","",lbl$id))
 # lbl <- lbl[grep("#",lbl$id,invert = T, value = F),]
 
 ## 
 idNames <- idNames %>%
   as_tibble() %>%
   bind_rows(lbl %>% select(id, syn = label, canonical)) %>%
+  mutate(id = str_replace(id, "Orphanet", "ORPHA")) %>%
   mutate(DB = gsub(":.*","", id))
 ## unique
 dim(unique(idNames))
@@ -339,6 +342,7 @@ dim(idNames)
 
 ## all idNames in entryId
 table(idNames$id %in% entryId$id)
+
 ## Remove empty names, ifany
 nc <- nchar(idNames$syn)
 table(nc)
