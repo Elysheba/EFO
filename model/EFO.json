@@ -1,0 +1,293 @@
+{
+  "EFO_entryId": {
+    "tableName": ["EFO_entryId"],
+    "fields": [
+      {
+        "name": "DB",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Name original database/ontology"
+      },
+      {
+        "name": "id",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Disease ontology identifier from EFO"
+      },
+      {
+        "name": "def",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "level",
+        "type": "integer",
+        "nullable": false,
+        "unique": false,
+        "comment": ""
+      }
+    ],
+    "primaryKey": ["DB", "id"],
+    "foreignKeys": {},
+    "indexes": [
+      {
+        "fields": ["DB", "id"],
+        "unique": [true]
+      }
+    ],
+    "display": {
+      "x": [-96],
+      "y": [-94],
+      "color": ["NA"],
+      "comment": ["All EFO identifiers, definition and level info"]
+    }
+  },
+  "EFO_crossId": {
+    "tableName": ["EFO_crossId"],
+    "fields": [
+      {
+        "name": "DB1",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Name database for id1"
+      },
+      {
+        "name": "id1",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "disease ontology identifier"
+      },
+      {
+        "name": "DB2",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Name database id2"
+      },
+      {
+        "name": "id2",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Crossreference disease ontology id to id1"
+      }
+    ],
+    "primaryKey": [],
+    "foreignKeys": [
+      {
+        "refTable": ["EFO_entryId"],
+        "key": [
+          {
+            "from": "DB1",
+            "to": "DB"
+          },
+          {
+            "from": "id1",
+            "to": "id"
+          }
+        ],
+        "cardinality": [0, -1, 1, 1]
+      }
+    ],
+    "indexes": [
+      {
+        "fields": ["DB1", "id1"],
+        "unique": [false]
+      }
+    ],
+    "display": {
+      "x": [-214],
+      "y": [114],
+      "color": ["NA"],
+      "comment": ["Cross-reference table"]
+    }
+  },
+  "EFO_parentId": {
+    "tableName": ["EFO_parentId"],
+    "fields": [
+      {
+        "name": "DB",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Database for id"
+      },
+      {
+        "name": "id",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Disease ontology identifier from EFO"
+      },
+      {
+        "name": "pDB",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Name database for parent id"
+      },
+      {
+        "name": "parent",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Parent ontology for id in EFO"
+      },
+      {
+        "name": "origin",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": ""
+      }
+    ],
+    "primaryKey": [],
+    "foreignKeys": [
+      {
+        "refTable": ["EFO_entryId"],
+        "key": [
+          {
+            "from": "DB",
+            "to": "DB"
+          },
+          {
+            "from": "id",
+            "to": "id"
+          }
+        ],
+        "cardinality": [0, -1, 1, 1]
+      },
+      {
+        "refTable": ["EFO_entryId"],
+        "key": [
+          {
+            "from": "pDB",
+            "to": "DB"
+          },
+          {
+            "from": "parent",
+            "to": "id"
+          }
+        ],
+        "cardinality": [0, -1, 1, 1]
+      }
+    ],
+    "indexes": [
+      {
+        "fields": ["parent", "pDB"],
+        "unique": [false]
+      },
+      {
+        "fields": ["DB", "id"],
+        "unique": [false]
+      }
+    ],
+    "display": {
+      "x": [-225],
+      "y": [-225],
+      "color": ["NA"],
+      "comment": ["Hierarchical information"]
+    }
+  },
+  "EFO_idNames": {
+    "tableName": ["EFO_idNames"],
+    "fields": [
+      {
+        "name": "DB",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Name original database"
+      },
+      {
+        "name": "id",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Disease ontology identifier from EFO"
+      },
+      {
+        "name": "syn",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Term (synonym or label) to describe the disease"
+      },
+      {
+        "name": "canonical",
+        "type": "logical",
+        "nullable": false,
+        "unique": false,
+        "comment": "Current label for the entry"
+      }
+    ],
+    "primaryKey": [],
+    "foreignKeys": [
+      {
+        "refTable": ["EFO_entryId"],
+        "key": [
+          {
+            "from": "DB",
+            "to": "DB"
+          },
+          {
+            "from": "id",
+            "to": "id"
+          }
+        ],
+        "cardinality": [0, -1, 1, 1]
+      }
+    ],
+    "indexes": [
+      {
+        "fields": ["DB", "id"],
+        "unique": [false]
+      }
+    ],
+    "display": {
+      "x": [143],
+      "y": [-181],
+      "color": ["NA"],
+      "comment": ["Synonym and label info"]
+    }
+  },
+  "EFO_sourceFiles": {
+    "tableName": ["EFO_sourceFiles"],
+    "fields": [
+      {
+        "name": "url",
+        "type": "character",
+        "nullable": false,
+        "unique": true,
+        "comment": "URL location of the source files"
+      },
+      {
+        "name": "current",
+        "type": "character",
+        "nullable": false,
+        "unique": false,
+        "comment": "Date of the current (or used) version of the source files"
+      }
+    ],
+    "primaryKey": ["url"],
+    "foreignKeys": {},
+    "indexes": [
+      {
+        "fields": ["url"],
+        "unique": [true]
+      }
+    ],
+    "display": {
+      "x": [90],
+      "y": [24],
+      "color": ["NA"],
+      "comment": ["Information on source file"]
+    }
+  }
+}

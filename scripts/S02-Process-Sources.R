@@ -12,12 +12,19 @@ library(dplyr)
 library(tibble)
 library(tidyr)
 library(stringr)
-
+library(here)
+library(ReDaMoR)
 ##
 mc.cores <- 55
-sdir <- "../sources/efo"
+sdir <- "../sources"
 ddir <- "../data"
-source("../../00-Utils/writeLastUpdate.R")
+
+###############################################################################@
+## Data model ----
+###############################################################################@
+load(here("model", "EFO.rda"))
+dm <- model_relational_data(dm)
+save(dm, file = here("model", "EFO.rda"))
 
 ###############################################################################@
 ## Source information ----
@@ -65,9 +72,8 @@ nodesJson <- lapply(1:nrow(readJson$graphs$nodes[[1]]),
                         ## id
                         id <- gsub("_",":",gsub(".*/","",readJson$graphs$nodes[[1]]$id[[i]]))
                         ## Name and Xref
-                        descr <- readJson$graphs$nodes[[1]]$meta$basicPropertyValues[[i]]
-                        Xref <- descr[grep("_definition_citation",descr$pred),c("val")]
-                        name <- descr[grep("alternative_term", descr$pred),c("val")]
+                        xref <- readJson$graphs$nodes[[1]]$meta$xrefs[[i]]$val
+                        name <- readJson$graphs$nodes[[1]]$meta$synonyms[[i]]$val
                         ## Definition
                         def <- readJson$graphs$nodes[[1]]$meta$definition[i,"val"]
                         ## df
@@ -76,12 +82,12 @@ nodesJson <- lapply(1:nrow(readJson$graphs$nodes[[1]]),
                           def = def,
                           label = readJson$graphs$nodes[[1]]$lbl[[i]],
                           stringsAsFactors = FALSE)
-                        if(length(Xref)==0){
+                        if(length(xref)==0){
                           df2 <- NULL
                         }else{
                           df2 <- data.frame(
                             id = id,
-                            Xref = Xref,
+                            Xref = xref,
                             stringsAsFactors = FALSE)
                           }
                         if(length(name)==0){
@@ -100,13 +106,13 @@ xref <- do.call(rbind, lapply(nodesJson, function(x) x$xref))
 syn <- do.call(rbind, lapply(nodesJson, function(x) x$syn))
 
 ## edges (parents)
-# edgesJson <- readJson$graphs$edges[[1]]
-# edgesJson <- edgesJson[which(edgesJson$pred %in% c("is_a")),]
-# edgesJson$sub <- gsub("_",":",gsub(".*/","",edgesJson$sub))
-# edgesJson$obj <- gsub("_",":",gsub(".*/","",edgesJson$obj))
+edgesJson <- readJson$graphs$edges[[1]]
+edgesJson <- edgesJson[which(edgesJson$pred %in% c("is_a")),]
+edgesJson$sub <- gsub("_",":",gsub(".*/","",edgesJson$sub))
+edgesJson$obj <- gsub("_",":",gsub(".*/","",edgesJson$obj))
 
 ## get parents from OBO file
-obo <- getOboInfo("../sources/efo/efo.obo")
+# obo <- getOboInfo("../sources/efo/efo.obo")
 # ## Not the same amount of terms in obo and owl
 # nf.obo <- id[!(id$id %in% obo$termDef$id),]
 # w <- which(!is.na(as.numeric(gsub("^[^[:digit:]]*","",nf.obo$id))))
@@ -120,30 +126,12 @@ obo <- getOboInfo("../sources/efo/efo.obo")
 # head(nf.owl[ww,])
 
 ## Get Parents
-edgesJson <- obo$termParents
+# edgesJson <- obo$termParents
 ## Remove NA in parent
-edgesJson <- edgesJson[!is.na(edgesJson$parent),]
+# edgesJson <- edgesJson[!is.na(edgesJson$parent),]
 
-# getDescendants <- function(id){
-#   direct <- edgesJson[which(edgesJson$obj == id),"sub"]
-#   descendants <- direct
-#   level <- 0
-#   dLev <- c()
-#   for(d in direct){
-#     dDesc <- getDescendants(d)
-#     dLev <- c(dLev, dDesc$level)
-#     descendants <- c(descendants, dDesc$descendants)
-#   }
-#   if(length(dLev)>0){
-#     level <- max(dLev)+1
-#   }
-#   return(list(descendants=unique(descendants), level=level))
-# }
-# disease <- getDescendants("EFO:0000408")
-# length(diseaseO$descendants) ## 8993
-
-getDescendants <- function(sp){
-  direct <- edgesJson[which(edgesJson$parent == sp),"id"]
+getDescendants <- function(id){
+  direct <- edgesJson[which(edgesJson$obj == id),"sub"]
   descendants <- direct
   level <- 0
   dLev <- c()
@@ -155,13 +143,35 @@ getDescendants <- function(sp){
   if(length(dLev)>0){
     level <- max(dLev)+1
   }
-  return(list(descendants=unique(c(descendants,sp)), level=level))
+  return(list(descendants=unique(c(descendants, id)), level=level))
 }
-diseaseO <- getDescendants("EFO:0000408")
-"EFO:0000408" %in% diseaseO$descendants
-length(diseaseO$descendants) ## 9209 ## About 200 IDs are missing parent information (are not a child themselves)
+disease <- getDescendants("EFO:0000408")
+length(disease$descendants) ## 9191
+"EFO:0000408" %in% disease$descendants
+## length(disease$descendants) ## About 200 IDs are missing parent information (are not a child themselves)
 ## Check missing ids: EFO:0003769 and EFO:0002916
-c("EFO:0003769","EFO:0002916") %in% diseaseO$descendants
+# c("EFO:0003769","EFO:0002916") %in% disease$descendants ## resolved ok
+
+# getDescendants <- function(sp){
+#   direct <- edgesJson[which(edgesJson$parent == sp),"id"]
+#   descendants <- direct
+#   level <- 0
+#   dLev <- c()
+#   for(d in direct){
+#     dDesc <- getDescendants(d)
+#     dLev <- c(dLev, dDesc$level)
+#     descendants <- c(descendants, dDesc$descendants)
+#   }
+#   if(length(dLev)>0){
+#     level <- max(dLev)+1
+#   }
+#   return(list(descendants=unique(c(descendants,sp)), level=level))
+# }
+# diseaseO <- getDescendants("EFO:0000408")
+# "EFO:0000408" %in% diseaseO$descendants
+# # length(diseaseO$descendants) ## 9209 ## About 200 IDs are missing parent information (are not a child themselves)
+# ## Check missing ids: EFO:0003769 and EFO:0002916
+# c("EFO:0003769","EFO:0002916") %in% diseaseO$descendants
 
 # getAncestor <- function(id){
 #   direct <- edgesJson[which(edgesJson$sub == id),"obj"]
@@ -182,7 +192,7 @@ c("EFO:0003769","EFO:0002916") %in% diseaseO$descendants
 
 ######################################
 ## crossId
-crossId <- xref[xref$id %in% diseaseO$descendants,]
+crossId <- xref[xref$id %in% disease$descendants,] %>% as_tibble()
 dim(crossId)
 table(gsub(":.*","",crossId$id))
 names(crossId) <- c("dbid1","dbid2")
@@ -238,14 +248,19 @@ toCheck[toCheck$DB2 == "MSH",]
 head(toCheck[toCheck$DB2 == "Wikipedia",])
 table(toKeep$DB2)
 table(toKeep$DB1)
+## Remove xref
+toKeep <- toKeep %>% filter(!DB2 %in% c("http", "https", "ISBN-10", "url", "Wikidata", "Wikipedia"))
+##
 crossId <- setNames(toKeep[,c("dbid1","dbid2")],c("id1","id2"))
 dim(crossId)
 head(crossId)
+
 
 ## correct ORDO:Orphanet_ wrong encodings
 crossId$id2 <- gsub(paste("Orphanet_","Orphanet","ORDO:",sep = "|"),"ORPHA:",crossId$id2)
 crossId$id2 <- gsub("MESH","MeSH",crossId$id2)
 crossId$id2 <- gsub("MSH","MeSH",crossId$id2)
+crossId$id2 <- gsub("MEDGEN","MedGen",crossId$id2)
 crossId$id2 <- gsub("MEDDRA","MedDRA",crossId$id2)
 crossId$id2 <- gsub("MeDRA","MedDRA",crossId$id2)
 crossId$id2 <- gsub("NCI_Thesaurus","NCIt",crossId$id2)
@@ -254,6 +269,7 @@ crossId$id2 <- gsub("NCIT","NCIt",crossId$id2)
 crossId$id2 <- gsub("\\bNCI\\b","NCIt",crossId$id2)
 crossId$id2 <- gsub("SNOWMEDCT","SNOMEDCT",crossId$id2)
 crossId$id2 <- gsub("SNOMEDCT_US","SNOMEDCT",crossId$id2)
+crossId$id2 <- gsub("SCTID","SNOMEDCT",crossId$id2)
 crossId$id2 <- gsub(paste("UMLSCUI","UMLS_CUI",sep = "|"), "UMLS",crossId$id2)
 crossId$id1 <- gsub("Orphanet","ORPHA",crossId$id1)
 table(gsub(":.*","",crossId$id1))
@@ -269,7 +285,7 @@ dim(crossId)
 
 ######################################
 ## entryId
-entryId <- id[id$id %in% diseaseO$descendants,]
+entryId <- id[id$id %in% disease$descendants,] %>% as_tibble()
 head(entryId)
 dim(entryId)
 table(gsub(":.*","",entryId$id))
@@ -301,14 +317,14 @@ table(crossId$id1 %in% entryId$id)
 
 ######################################
 ## idNames
-idNames <- syn[syn$id %in% diseaseO$descendants,]
+idNames <- syn[syn$id %in% disease$descendants,]
 idNames$canonical <- FALSE
 head(idNames)
 dim(idNames)
 table(gsub(":.*","",idNames$id))
 
 ## Labels
-lbl <- id[id$id %in% diseaseO$descendants,c("id","label")]
+lbl <- id[id$id %in% disease$descendants,c("id","label")]
 lbl$canonical <- TRUE
 table(gsub(":.*","",lbl$id))
 unique(grep("#",lbl$id, value =T))
@@ -355,11 +371,18 @@ idNames[which(nc == 2),]
 
 ## All idnames in entryid
 table(idNames$id %in% entryId$id)
+table(entryId$id %in% idNames$id)
+
+## Not every ID has a definition available, in this case, the canonical label will be used
+tmp <- idNames %>% filter(canonical)
+entryId <- entryId %>% 
+  mutate(def = case_when(is.na(def) ~ tmp$syn[match(id,tmp$id)],
+                         TRUE ~ def))
 
 ######################################
 ## parentId
-# parentId <- edgesJson[which(edgesJson$obj %in% diseaseO$descendants),c("sub","obj")]
-parentId <- edgesJson[which(edgesJson$parent %in% diseaseO$descendants),]
+parentId <- edgesJson[which(edgesJson$obj %in% disease$descendants),c("sub","obj")]
+# parentId <- edgesJson[which(edgesJson$parent %in% disease$descendants),]
 names(parentId) <- c("id","parent")
 table(gsub(":.*","",parentId$id))
 table(gsub(":.*","",parentId$parent))
@@ -367,6 +390,7 @@ parentId$id <- gsub("Orphanet","ORPHA",parentId$id)
 parentId$parent <- gsub("Orphanet","ORPHA",parentId$parent)
 parentId$DB <- gsub(":.*","",parentId$id)
 parentId$pDB <- gsub(":.*","",parentId$parent)
+parentId$origin <- "EFO"
 
 ## All idnames in entryid
 table(parentId$id %in% entryId$id)
@@ -374,6 +398,44 @@ table(parentId$parent %in% entryId$id)
 ## "Disease" itself is not in entryId --> OK
 ep <- parentId[!(parentId$parent %in% entryId$id),]
 # ep[ep$parent == "EFO:1001901",]
+
+## Add levels
+getAncestors <- function(id){
+  direct <- termParents[[id]]
+  parents <- direct
+  level <- 0
+  dLev <- c()
+  for(d in direct){
+    dPar <- getAncestors(d)
+    dLev <- c(dLev, dPar$level)
+    parents <- c(parents, dPar$parents)
+  }
+  if(length(dLev)>0){
+    level <- max(dLev)+1
+  }
+  return(list(parents=unique(parents), level=level))
+}
+
+parentList <- unstack(parentId, parent~id)
+termParents <- parentList
+library(BiocParallel)
+bpparam <- MulticoreParam(workers = 30)
+
+termAncestors <- bplapply(
+  parentId$id,
+  getAncestors,
+  BPPARAM = bpparam
+)
+names(termAncestors) <- parentId$id
+
+entryId <- entryId %>%
+  mutate(
+    level=unlist(lapply(termAncestors, function(x) x$level))[entryId$id]
+  ) %>%
+  mutate(level = case_when(is.na(level) ~ 0,
+                           TRUE ~ level)) 
+
+
 
 #######################################
 crossId$id1 <- gsub(".*:","",crossId$id1)
@@ -385,9 +447,9 @@ idNames$id <- gsub(".*:","",idNames$id)
 
 ############################
 EFO_idNames <- idNames[,c("DB","id","syn","canonical")]
-EFO_parentId <- parentId[,c("DB","id","pDB","parent")]
+EFO_parentId <- parentId[,c("DB","id","pDB","parent","origin")]
 EFO_crossId <- crossId[,c("DB1","id1","DB2","id2")]
-EFO_entryId <- entryId[,c("DB","id","def")]
+EFO_entryId <- entryId[,c("DB","id","def","level")]
 
 ############################
 toSave <- grep("^EFO[_]", ls(), value=T)
@@ -409,8 +471,7 @@ for(f in toSave){
     qmethod = "double"
   )
 }
-writeLastUpdate()
 
 ##############################################################
 ## Check model
-source("../../00-Utils/autoCheckModel.R")
+# source("../../00-Utils/autoCheckModel.R")
