@@ -14,7 +14,7 @@ library(tidyr)
 library(stringr)
 library(here)
 library(ReDaMoR)
-##
+##>
 mc.cores <- 55
 sdir <- "../sources"
 ddir <- "../data"
@@ -23,7 +23,7 @@ ddir <- "../data"
 ## Data model ----
 ###############################################################################@
 load(here("model", "EFO.rda"))
-dm <- model_relational_data(dm)
+# dm <- model_relational_data(dm)
 save(dm, file = here("model", "EFO.rda"))
 
 ###############################################################################@
