@@ -1,8 +1,7 @@
 rm(list = ls())
 gc()
 
-setwd("~/Shared/Data-Science/Data-Source-Model-Repository/EFO/scripts/")
-source("./S11-Read-obo.R")
+# source(here("scripts/S11-Read-obo.R"))
 
 library(XML)
 library(parallel)
@@ -16,21 +15,21 @@ library(here)
 library(ReDaMoR)
 ##>
 mc.cores <- 55
-sdir <- "../sources"
-ddir <- "../data"
+sdir <- here("sources")
+ddir <- here("data")
 
 ###############################################################################@
 ## Data model ----
 ###############################################################################@
 load(here("model", "EFO.rda"))
-# dm <- model_relational_data(dm)
-save(dm, file = here("model", "EFO.rda"))
+# dm <- model_relational_data()
+# save(dm, file = here("model", "EFO.rda"))
 
 ###############################################################################@
 ## Source information ----
 ###############################################################################@
 
-desc <- RJSONIO::readJSONStream("../DESCRIPTION.json")
+desc <- RJSONIO::readJSONStream(here("DESCRIPTION.json"))
 
 sourceFiles <- desc$"source files"
 sfi_name <- unlist(lapply(
@@ -434,8 +433,6 @@ entryId <- entryId %>%
   ) %>%
   mutate(level = case_when(is.na(level) ~ 0,
                            TRUE ~ level)) 
-
-
 
 #######################################
 crossId$id1 <- gsub(".*:","",crossId$id1)

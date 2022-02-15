@@ -1,14 +1,14 @@
 {
 	"name": "EFO",
 	"title": "Data extracted from the Experimental Factor Ontology (EFO) database",
-	"description": "The scope of EFO is to support the annotation, analysis and visualization of data handled by many groups at the EBI and as the core ontology for Open Targets.",
+	"description": "The scope of EFO is to support the annotation, analysis and visualization of data handled by many groups at the EBI and as the core ontology for Open Targets. Only identifiers related to diseases are retained in TKCat",
 	"reference URL": "https://www.ebi.ac.uk/efo/",
 	"version": "0.3",
 	"maintainer":"Liesbeth François <liesbeth.francois@ucb.com>",
 	"source files": [
 		{
 			"name":"efo.owl",
-			"URL template":"https://github.com/EBISPOT/efo/releases/latest/download/efo.owl",
+			"URL template":"https://github.com/EBISPOT/efo/releases/download/v3.32.0/efo.owl",
 			"remote update frequency": {
 				"value": 0.03,
 				"units": "1/day"
