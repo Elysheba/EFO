@@ -32,7 +32,7 @@
       }
     ],
     "primaryKey": ["DB", "id"],
-    "foreignKeys": {},
+    "foreignKeys": [],
     "indexes": [
       {
         "fields": ["DB", "id"],
@@ -40,8 +40,8 @@
       }
     ],
     "display": {
-      "x": [-96],
-      "y": [-94],
+      "x": [-39],
+      "y": [-201],
       "color": ["NA"],
       "comment": ["All EFO identifiers, definition and level info"]
     }
@@ -102,8 +102,8 @@
       }
     ],
     "display": {
-      "x": [-214],
-      "y": [114],
+      "x": [190],
+      "y": [-193],
       "color": ["NA"],
       "comment": ["Cross-reference table"]
     }
@@ -189,10 +189,10 @@
       }
     ],
     "display": {
-      "x": [-225],
-      "y": [-225],
+      "x": [-168],
+      "y": [-335],
       "color": ["NA"],
-      "comment": ["Hierarchical information"]
+      "comment": ["Cross-reference table"]
     }
   },
   "EFO_idNames": {
@@ -251,8 +251,8 @@
       }
     ],
     "display": {
-      "x": [143],
-      "y": [-181],
+      "x": [-250],
+      "y": [-51],
       "color": ["NA"],
       "comment": ["Synonym and label info"]
     }
@@ -276,7 +276,7 @@
       }
     ],
     "primaryKey": ["url"],
-    "foreignKeys": {},
+    "foreignKeys": [],
     "indexes": [
       {
         "fields": ["url"],
@@ -284,10 +284,307 @@
       }
     ],
     "display": {
-      "x": [90],
-      "y": [24],
+      "x": [-357],
+      "y": [158],
       "color": ["NA"],
       "comment": ["Information on source file"]
+    }
+  },
+  "EFO_trait_aboutId": {
+    "tableName": ["EFO_trait_aboutId"],
+    "fields": [
+      {
+        "name": "DB1",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "id1",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "relation",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "DB2",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "id2",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      }
+    ],
+    "foreignKeys": [
+      {
+        "refTable": ["EFO_trait_entryId"],
+        "key": [
+          {
+            "from": "DB1",
+            "to": "DB"
+          },
+          {
+            "from": "id1",
+            "to": "id"
+          }
+        ],
+        "cardinality": [0, -1, 0, 1]
+      },
+      {
+        "refTable": ["EFO_trait_entryId"],
+        "key": [
+          {
+            "from": "DB2",
+            "to": "DB"
+          },
+          {
+            "from": "id2",
+            "to": "id"
+          }
+        ],
+        "cardinality": [0, -1, 0, 1]
+      }
+    ],
+    "indexes": {},
+    "display": {
+      "x": [-158],
+      "y": [161],
+      "color": ["NA"],
+      "comment": ["NA"]
+    }
+  },
+  "EFO_trait_crossId": {
+    "tableName": ["EFO_trait_crossId"],
+    "fields": [
+      {
+        "name": "DB1",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "id1",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "DB2",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "id2",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      }
+    ],
+    "foreignKeys": [
+      {
+        "refTable": ["EFO_trait_entryId"],
+        "key": [
+          {
+            "from": "DB1",
+            "to": "DB"
+          },
+          {
+            "from": "id1",
+            "to": "id"
+          }
+        ],
+        "cardinality": [0, -1, 0, 1]
+      }
+    ],
+    "indexes": {},
+    "display": {
+      "x": [232],
+      "y": [150],
+      "color": ["NA"],
+      "comment": ["NA"]
+    }
+  },
+  "EFO_trait_entryId": {
+    "tableName": ["EFO_trait_entryId"],
+    "fields": [
+      {
+        "name": "DB",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "id",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "def",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "level",
+        "type": "numeric",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      }
+    ],
+    "foreignKeys": {},
+    "indexes": [
+      {
+        "fields": ["DB", "id"],
+        "unique": [true]
+      }
+    ],
+    "display": {
+      "x": [49],
+      "y": [248],
+      "color": ["NA"],
+      "comment": ["NA"]
+    }
+  },
+  "EFO_trait_idNames": {
+    "tableName": ["EFO_trait_idNames"],
+    "fields": [
+      {
+        "name": "DB",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "id",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "syn",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "canonical",
+        "type": "logical",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      }
+    ],
+    "foreignKeys": {},
+    "indexes": {},
+    "display": {
+      "x": [300],
+      "y": [-96],
+      "color": ["NA"],
+      "comment": ["NA"]
+    }
+  },
+  "EFO_trait_parentId": {
+    "tableName": ["EFO_trait_parentId"],
+    "fields": [
+      {
+        "name": "DB",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "id",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "pDB",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "parent",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      },
+      {
+        "name": "origin",
+        "type": "character",
+        "nullable": true,
+        "unique": false,
+        "comment": ""
+      }
+    ],
+    "foreignKeys": [
+      {
+        "refTable": ["EFO_trait_entryId"],
+        "key": [
+          {
+            "from": "DB",
+            "to": "DB"
+          },
+          {
+            "from": "id",
+            "to": "id"
+          }
+        ],
+        "cardinality": [0, -1, 0, 1]
+      },
+      {
+        "refTable": ["EFO_trait_entryId"],
+        "key": [
+          {
+            "from": "pDB",
+            "to": "DB"
+          },
+          {
+            "from": "parent",
+            "to": "id"
+          }
+        ],
+        "cardinality": [0, -1, 1, 1]
+      }
+    ],
+    "indexes": {},
+    "display": {
+      "x": [47],
+      "y": [102],
+      "color": ["NA"],
+      "comment": ["NA"]
     }
   }
 }

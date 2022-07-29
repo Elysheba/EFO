@@ -8,7 +8,7 @@
 	"source files": [
 		{
 			"name":"efo.owl",
-			"URL template":"https://github.com/EBISPOT/efo/releases/download/v3.32.0/efo.owl",
+			"URL template":"https://github.com/EBISPOT/efo/releases/download/v3.44.0/efo.owl",
 			"remote update frequency": {
 				"value": 0.03,
 				"units": "1/day"
